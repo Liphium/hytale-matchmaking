@@ -125,7 +125,7 @@ func pollForToken(deviceCode *DeviceCodeResponse) {
 
 		if tokenResp.AccessToken != "" {
 			log.Printf("✓ Access token obtained successfully!")
-			handleTokenSuccess(tokenResp.AccessToken)
+			handleTokenSuccess(tokenResp.AccessToken, tokenResp.RefreshToken)
 			return
 		}
 	}
@@ -148,7 +148,7 @@ func pollTokenEndpoint(deviceCode string) (*TokenResponse, error) {
 	return &tokenResp, nil
 }
 
-func handleTokenSuccess(accessToken string) {
+func handleTokenSuccess(accessToken, refreshToken string) {
 	// Step 4: Get Available Profiles
 	profiles, err := getProfiles(accessToken)
 	if err != nil {
@@ -165,29 +165,12 @@ func handleTokenSuccess(accessToken string) {
 	profile := profiles.Profiles[0]
 	log.Printf("Using profile: %s (UUID: %s)", profile.Username, profile.UUID)
 
-	// Step 5: Create Game Session
-	session, err := createGameSession(accessToken, profile.UUID)
-	if err != nil {
-		log.Printf("Error creating game session: %v", err)
-		return
-	}
-
-	log.Printf("✓ Game session created successfully!")
-
-	// Parse expiration time
-	expiresAt, err := time.Parse(time.RFC3339, session.ExpiresAt)
-	if err != nil {
-		log.Printf("Warning: couldn't parse expiration time, using default")
-		expiresAt = time.Now().Add(24 * time.Hour)
-	}
-
 	// Store the token
 	token := Token{
-		IdentityToken: session.IdentityToken,
-		SessionToken:  session.SessionToken,
-		Account:       profile.Username,
-		UUID:          profile.UUID,
-		ExpiresAt:     expiresAt,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		Account:      profile.Username,
+		UUID:         profile.UUID,
 	}
 
 	addToken(token)

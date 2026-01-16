@@ -14,11 +14,10 @@ const RecommendedRenewInterval = 20 * time.Second
 const TokenTTL = 60 * time.Second
 
 type Token struct {
-	IdentityToken string    `json:"identity_token"`
-	SessionToken  string    `json:"session_token"`
-	Account       string    `json:"account"`
-	UUID          string    `json:"uuid"`
-	ExpiresAt     time.Time `json:"expires_at"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	Account      string `json:"account"`
+	UUID         string `json:"uuid"`
 }
 
 type TokenInfo struct {

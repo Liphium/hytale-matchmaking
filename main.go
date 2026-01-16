@@ -43,10 +43,10 @@ func main() {
 			defer token.Mutex.Unlock()
 
 			return c.JSON(fiber.Map{
-				"id":             token.Id,
-				"identity_token": token.Token.IdentityToken,
-				"session_token":  token.Token.SessionToken,
-				"uuid":           token.Token.UUID,
+				"id":            token.Id,
+				"access_token":  token.Token.AccessToken,
+				"refresh_token": token.Token.RefreshToken,
+				"uuid":          token.Token.UUID,
 			})
 		})
 
