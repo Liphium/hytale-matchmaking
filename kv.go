@@ -35,12 +35,7 @@ var tokenCounter int = 0
 var tokenCounterMutex = &sync.Mutex{}
 
 func loadTokens() {
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatal("Couldn't get working directory:", err)
-	}
-
-	tokensFile := path.Join(wd, TokenFileName)
+	tokensFile := path.Join(os.Getenv("TOKEN_FILE_LOCATION"), TokenFileName)
 	content, err := os.ReadFile(tokensFile)
 	if err != nil {
 		bytes, err := json.Marshal([]Token{})
@@ -130,12 +125,7 @@ func saveToTokens() {
 		return true
 	})
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatal("Couldn't get working directory:", err)
-	}
-
-	tokensFile := path.Join(wd, TokenFileName)
+	tokensFile := path.Join(os.Getenv("TOKEN_FILE_LOCATION"), TokenFileName)
 
 	bytes, err := json.Marshal(foundTokens)
 	if err != nil {

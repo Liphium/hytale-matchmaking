@@ -24,7 +24,7 @@ RUN apt-get install -y wget
 COPY --from=builder /app/start .
 
 # Create a volume for persistent token storage
-VOLUME ["/app/tokens.json"]
+VOLUME ["/app/data"]
 
 # Run the app together with the ports
 EXPOSE 80
