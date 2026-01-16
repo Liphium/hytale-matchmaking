@@ -23,6 +23,9 @@ RUN apt-get install -y wget
 # Copy the current executable over to the container from the builder
 COPY --from=builder /app/start .
 
+# Create a volume for persistent token storage
+VOLUME ["/app/tokens.json"]
+
 # Run the app together with the ports
 EXPOSE 80
 CMD ["./start"]
