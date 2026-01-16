@@ -96,6 +96,23 @@ func refreshToken(id int) {
 	token.ExpiresAt = time.Now().Add(TokenTTL)
 }
 
+func replaceToken(id int, accessToken string) {
+	obj, ok := tokenMap.Load(id)
+	if !ok {
+		return
+	}
+	info := obj.(*TokenInfo)
+
+	info.Mutex.Lock()
+	token := info.Token
+	token.AccessToken = accessToken
+	info.Token = token
+	tokenMap.Store(id, info)
+	info.Mutex.Unlock()
+
+	saveToTokens()
+}
+
 func addToken(token Token) {
 	tokenCounterMutex.Lock()
 	defer tokenCounterMutex.Unlock()

@@ -50,6 +50,19 @@ func main() {
 			})
 		})
 
+		// Handle setting token
+		router.Get("/set_token", func(c *fiber.Ctx) error {
+			id := c.Query("id", "-")
+			token := c.Query("access_token", "-")
+			i, err := strconv.Atoi(id)
+			if token == "-" || id == "-" || err != nil {
+				return c.SendStatus(fiber.StatusBadRequest)
+			}
+
+			replaceToken(i, token)
+			return c.SendStatus(fiber.StatusOK)
+		})
+
 		// Handle renews for the tokens
 		router.Get("/renew", func(c *fiber.Ctx) error {
 			id := c.Query("id", "-")

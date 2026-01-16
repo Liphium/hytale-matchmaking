@@ -170,7 +170,7 @@ func handleTokenSuccess(accessToken, refreshToken string) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		Account:      profile.Username,
-		UUID:         profile.UUID,
+		UUID:         profiles.Owner,
 	}
 
 	addToken(token)
