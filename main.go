@@ -33,7 +33,7 @@ func main() {
 		})
 
 		// Handle for managing the get token
-		app.Get("/get_token", func(c *fiber.Ctx) error {
+		router.Get("/get_token", func(c *fiber.Ctx) error {
 			token, ok := getTokenForServer()
 			if !ok {
 				return c.SendStatus(fiber.StatusNotFound)
@@ -51,7 +51,7 @@ func main() {
 		})
 
 		// Handle renews for the tokens
-		app.Get("/renew", func(c *fiber.Ctx) error {
+		router.Get("/renew", func(c *fiber.Ctx) error {
 			id := c.Query("id", "-")
 			i, err := strconv.Atoi(id)
 			if err != nil {
@@ -63,7 +63,7 @@ func main() {
 		})
 
 		// Token for generating a new token using the API
-		app.Get("/add_new", generateToken)
+		router.Get("/add_new", generateToken)
 	})
 
 	// Hello world handler for health checks
