@@ -1,0 +1,13 @@
+//go:build !release
+// +build !release
+
+package main
+
+import (
+	"github.com/Liphium/hytale-matchmaking/starter"
+	"github.com/Liphium/magic/v2"
+)
+
+func main() {
+	magic.Start(starter.BuildMagicConfig())
+}

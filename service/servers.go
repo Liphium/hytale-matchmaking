@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"encoding/json"
@@ -7,6 +7,14 @@ import (
 	"path"
 	"sync"
 	"time"
+)
+
+// All states for servers
+const (
+	StateAvailable = "available"
+	StateLobby     = "lobby"
+	StateIngame    = "ingame"
+	StateEnd       = "end"
 )
 
 const TokenFileName = "tokens.json"
@@ -20,20 +28,22 @@ type Token struct {
 	UUID         string `json:"uuid"`
 }
 
-type TokenInfo struct {
+type ServerInfo struct {
 	Mutex     *sync.Mutex
 	Id        int
 	Used      bool
+	State     string
+	Game      string
 	ExpiresAt time.Time
 	Token     Token
 }
 
-var tokenMap = &sync.Map{}
+var serverMap = &sync.Map{}
 
 var tokenCounter int = 0
 var tokenCounterMutex = &sync.Mutex{}
 
-func loadTokens() {
+func LoadTokens() {
 	tokensFile := path.Join(os.Getenv("TOKEN_FILE_LOCATION"), TokenFileName)
 	content, err := os.ReadFile(tokensFile)
 	if err != nil {
@@ -55,7 +65,7 @@ func loadTokens() {
 
 	// Fill the map with all of the tokens in the file
 	for i, token := range tokens {
-		tokenMap.Store(i, &TokenInfo{
+		serverMap.Store(i, &ServerInfo{
 			Id:    i,
 			Used:  false,
 			Mutex: &sync.Mutex{},
@@ -65,59 +75,77 @@ func loadTokens() {
 	tokenCounter = len(tokens) + 1
 }
 
-func getTokenForServer() (*TokenInfo, bool) {
-	var foundToken *TokenInfo = nil
+func CreateNewServer(game string) (*ServerInfo, bool) {
+	var foundServer *ServerInfo = nil
 
-	tokenMap.Range(func(key, value any) bool {
-		token := value.(*TokenInfo)
-		token.Mutex.Lock()
-		defer token.Mutex.Unlock()
+	// Find a token that's not currently used
+	serverMap.Range(func(key, value any) bool {
+		info := value.(*ServerInfo)
+		info.Mutex.Lock()
+		defer info.Mutex.Unlock()
 
 		// Use the token when expired or not used currently
-		if !token.Used || time.Now().After(token.ExpiresAt) {
-			token.Used = true
-			token.ExpiresAt = time.Now().Add(TokenTTL)
-			foundToken = token
+		if !info.Used || time.Now().After(info.ExpiresAt) {
+			info.Used = true
+			info.ExpiresAt = time.Now().Add(TokenTTL)
+			info.State = StateAvailable
+			info.Game = game
+			foundServer = info
 			return false
 		}
 
 		return true
 	})
 
-	return foundToken, foundToken != nil
+	return foundServer, foundServer != nil
 }
 
-func refreshToken(id int) {
-	obj, valid := tokenMap.Load(id)
+func RefreshServer(id int) {
+	obj, valid := serverMap.Load(id)
 	if !valid {
 		return
 	}
-	token := obj.(*TokenInfo)
-	token.ExpiresAt = time.Now().Add(TokenTTL)
+	info := obj.(*ServerInfo)
+
+	info.Mutex.Lock()
+	defer info.Mutex.Unlock()
+	info.ExpiresAt = time.Now().Add(TokenTTL)
 }
 
-func replaceToken(id int, accessToken string) {
-	obj, ok := tokenMap.Load(id)
+func SetServerState(id int, state string) {
+	obj, valid := serverMap.Load(id)
+	if !valid {
+		return
+	}
+	info := obj.(*ServerInfo)
+
+	info.Mutex.Lock()
+	defer info.Mutex.Unlock()
+	info.State = state
+}
+
+func ReplaceAccessTokenForServer(id int, accessToken string) {
+	obj, ok := serverMap.Load(id)
 	if !ok {
 		return
 	}
-	info := obj.(*TokenInfo)
+	info := obj.(*ServerInfo)
 
 	info.Mutex.Lock()
 	token := info.Token
 	token.AccessToken = accessToken
 	info.Token = token
-	tokenMap.Store(id, info)
+	serverMap.Store(id, info)
 	info.Mutex.Unlock()
 
 	saveToTokens()
 }
 
-func addToken(token Token) {
+func AddToken(token Token) {
 	tokenCounterMutex.Lock()
 	defer tokenCounterMutex.Unlock()
 
-	tokenMap.Store(tokenCounter, &TokenInfo{
+	serverMap.Store(tokenCounter, &ServerInfo{
 		Id:    tokenCounter,
 		Used:  false,
 		Mutex: &sync.Mutex{},
@@ -131,8 +159,8 @@ func addToken(token Token) {
 // Always lock the token counter mutex before
 func saveToTokens() {
 	foundTokens := []Token{}
-	tokenMap.Range(func(key, value any) bool {
-		token := value.(*TokenInfo)
+	serverMap.Range(func(key, value any) bool {
+		token := value.(*ServerInfo)
 
 		token.Mutex.Lock()
 		defer token.Mutex.Unlock()

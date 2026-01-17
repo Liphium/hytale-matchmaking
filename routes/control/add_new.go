@@ -1,4 +1,4 @@
-package main
+package control_routes
 
 import (
 	"fmt"
@@ -6,7 +6,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Liphium/hytale-auth-manager/util"
+	"github.com/Liphium/hytale-matchmaking/service"
+	"github.com/Liphium/hytale-matchmaking/util"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -49,17 +50,7 @@ type Profile struct {
 	Username string `json:"username"`
 }
 
-type GameSessionResponse struct {
-	SessionToken  string `json:"sessionToken"`
-	IdentityToken string `json:"identityToken"`
-	ExpiresAt     string `json:"expiresAt"`
-}
-
-type GameSessionRequest struct {
-	UUID string `json:"uuid"`
-}
-
-func generateToken(c *fiber.Ctx) error {
+func addNewToken(c *fiber.Ctx) error {
 	// Step 1: Request Device Code
 	deviceCode, err := requestDeviceCode()
 	if err != nil {
@@ -166,14 +157,14 @@ func handleTokenSuccess(accessToken, refreshToken string) {
 	log.Printf("Using profile: %s (UUID: %s)", profile.Username, profile.UUID)
 
 	// Store the token
-	token := Token{
+	token := service.Token{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		Account:      profile.Username,
 		UUID:         profiles.Owner,
 	}
 
-	addToken(token)
+	service.AddToken(token)
 	log.Printf("✓ Token stored successfully for account: %s", profile.Username)
 }
 
@@ -188,21 +179,4 @@ func getProfiles(accessToken string) (*ProfilesResponse, error) {
 	}
 
 	return &profiles, nil
-}
-
-func createGameSession(accessToken, uuid string) (*GameSessionResponse, error) {
-	headers := util.Headers{
-		"Authorization": fmt.Sprintf("Bearer %s", accessToken),
-	}
-
-	requestBody := GameSessionRequest{
-		UUID: uuid,
-	}
-
-	session, err := util.Post[GameSessionResponse](GameSessionURL, requestBody, headers)
-	if err != nil {
-		return nil, err
-	}
-
-	return &session, nil
 }
