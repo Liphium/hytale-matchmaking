@@ -6,10 +6,9 @@ import (
 )
 
 type RegisterServerRequest struct {
-	IP         string `json:"ip"`
-	Port       int    `json:"port"`
-	Game       string `json:"game"`
-	MaxPlayers int    `json:"max_players"`
+	IP   string `json:"ip"`
+	Port int    `json:"port"`
+	Game string `json:"game"`
 }
 
 type RegisterServerResponse struct {
@@ -26,17 +25,20 @@ func registerServer(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	info, ok := service.CreateNewServer(req.Game)
+	// Find a valid token
+	token, ok := service.GetFreeToken()
 	if !ok {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	info.Mutex.Lock()
-	defer info.Mutex.Unlock()
+	token.Mutex.Lock()
+	defer token.Mutex.Unlock()
+
+	service.CreateServer(token.Id, req.IP, req.Port, req.Game)
 	return c.JSON(RegisterServerResponse{
-		ID:           info.Id,
-		AccessToken:  info.Token.AccessToken,
-		RefreshToken: info.Token.RefreshToken,
-		UUID:         info.Token.UUID,
+		ID:           token.Id,
+		AccessToken:  token.Token.AccessToken,
+		RefreshToken: token.Token.RefreshToken,
+		UUID:         token.Token.UUID,
 	})
 }

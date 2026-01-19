@@ -17,6 +17,6 @@ func setToken(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	service.ReplaceAccessTokenForServer(req.Id, req.AccessToken)
+	service.ReplaceAccessToken(req.Id, req.AccessToken)
 	return c.SendStatus(fiber.StatusOK)
 }
