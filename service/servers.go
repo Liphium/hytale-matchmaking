@@ -8,22 +8,17 @@ import (
 	"github.com/dgraph-io/ristretto/v2"
 )
 
-// All states for servers
-const (
-	ServerStateAvailable = "available"
-	ServerStateReady     = "ready"
-	ServerStateFull      = "full"
-)
-
 const RecommendedRenewInterval = 20 * time.Second
 const ServerTTL = 60 * time.Second
 
 type ServerInfo struct {
-	Mutex   *sync.Mutex
-	TokenId int // Also used
+	Mutex   *sync.RWMutex // Just for the general data on the server (IP, etc.)
+	TokenId int           // Also used
 	State   string
 	IP      string
 	Port    int
+
+	Matches *sync.Map // Match id -> *Match
 }
 
 var serverCache *ristretto.Cache[int, *ServerInfo]
@@ -46,10 +41,11 @@ func init() {
 
 func CreateServer(id int, ip string, port int, game string) bool {
 	overwritten := serverCache.SetWithTTL(id, &ServerInfo{
-		Mutex:   &sync.Mutex{},
+		Mutex:   &sync.RWMutex{},
 		TokenId: id,
 		IP:      ip,
 		Port:    port,
+		Matches: &sync.Map{},
 	}, 1, ServerTTL)
 
 	serverCache.Wait()

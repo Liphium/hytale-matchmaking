@@ -21,5 +21,4 @@ func SetupRoutes(router fiber.Router) {
 	router.Post("/set_access_token", setToken)
 	router.Post("/renew", renewServer)
 	router.Post("/register", registerServer)
-	router.Post("/set_state", setState)
 }
