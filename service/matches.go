@@ -14,13 +14,13 @@ const (
 )
 
 type Match struct {
-	Mutex       *sync.RWMutex
-	ID          string // Unique id (by server)
-	Server      int    // What server the match is on
-	State       string // The current state of the match
-	Game        string // The gamemode the match is in
-	PlayerCount int    // The current player count
-	MaxPlayers  int    // The maximum amount of players that can fit into the match
+	Mutex      *sync.RWMutex
+	ID         int      // Unique id (by server)
+	Server     int      // What server the match is on
+	State      string   // The current state of the match
+	Game       string   // The gamemode the match is in
+	Players    []string // List of player ids in the match
+	MaxPlayers int      // The maximum amount of players that can fit into the match
 }
 
 // Locks the mutex
@@ -32,19 +32,29 @@ func (m *Match) CanBeJoined() bool {
 }
 
 func (m *Match) canBeJoinedNoMutex() bool {
-	return m.State == MatchStateAccepting && m.PlayerCount+1 <= m.MaxPlayers
+	return m.State == MatchStateAccepting && len(m.Players)+1 <= m.MaxPlayers
 }
 
-// Tries to lock in a player count increment for the match (returns false if it didn't work)
-func (m *Match) IncrementPlayerCount() bool {
+// Tries to add a player to the match (returns false if it didn't work)
+func (m *Match) AddPlayerIfPossible(id string) bool {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
 
 	if m.canBeJoinedNoMutex() {
-		m.PlayerCount += 1
+		m.Players = append(m.Players, id)
 		return true
 	}
 	return false
+}
+
+// Remove all players in the match from the system
+func (m *Match) deleteAllPlayers() {
+	m.Mutex.RLock()
+	defer m.Mutex.RUnlock()
+
+	for _, player := range m.Players {
+		go deletePlayer(player) // In a goroutine to make sure no mutex shit happens
+	}
 }
 
 type MatchRegistry struct {
@@ -104,18 +114,19 @@ func (mr *MatchRegistry) setBestFillingMatch() {
 		return
 	}
 
+	currentSize := -1
 	for _, match := range mr.available {
 		if !match.CanBeJoined() {
 			continue
 		}
 
-		mr.Mutex.RLock()
-		defer mr.Mutex.RUnlock()
-
 		// Set as currently filling if more players than current or nil
-		if mr.currentlyFilling == nil || mr.currentlyFilling.PlayerCount < match.PlayerCount {
+		match.Mutex.RLock()
+		if mr.currentlyFilling == nil || currentSize < len(match.Players) {
 			mr.currentlyFilling = match
+			currentSize = len(match.Players)
 		}
+		match.Mutex.RUnlock()
 	}
 }
 
@@ -126,6 +137,9 @@ func (mr *MatchRegistry) cleanup() {
 		rem := mr.shouldBeRemoved(m)
 		if rem && mr.currentlyFilling == m {
 			mr.currentlyFilling = nil
+		}
+		if rem {
+			m.deleteAllPlayers()
 		}
 		return rem
 	})

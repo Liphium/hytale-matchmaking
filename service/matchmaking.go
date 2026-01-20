@@ -5,8 +5,14 @@ import "sync"
 // Game (string) -> *MatchRegistry
 var gameCache = &sync.Map{}
 
+type MatchCreate struct {
+	ID         int    `json:"id"`          // Unique id (by server)
+	Game       string `json:"game"`        // The gamemode the match is in
+	MaxPlayers int    `json:"max_players"` // The maximum amount of players that can fit into the match
+}
+
 // Returns whether or not the match could be registered (state and stuff will be adjusted)
-func AddMatch(server int, match *Match) bool {
+func AddMatch(server int, data MatchCreate) bool {
 	info, ok := serverCache.Get(server)
 	if !ok {
 		return false
@@ -16,20 +22,19 @@ func AddMatch(server int, match *Match) bool {
 	info.Mutex.RLock()
 	defer info.Mutex.RUnlock()
 
-	if match.Mutex == nil {
-		match.Mutex = &sync.RWMutex{}
+	// Initialize the match with the data from the request
+	match := &Match{
+		Mutex:      &sync.RWMutex{},
+		ID:         data.ID,
+		Game:       data.Game,
+		MaxPlayers: data.MaxPlayers,
+		Server:     server,
+		State:      MatchStateAvailable,
 	}
 
-	// Save the match to the cache
-	match.Mutex.Lock()
-	gameCp := match.Game
-	match.Server = info.TokenId
-	match.State = MatchStateAvailable
-	info.Matches.Store(match.ID, match)
-	match.Mutex.Unlock()
-
 	// Add to the game
-	addMatchToGame(gameCp, match)
+	info.Matches.Store(data.ID, match)
+	addMatchToGame(data.Game, match)
 
 	return true
 }
@@ -38,11 +43,11 @@ func addMatchToGame(game string, match *Match) {
 	obj, ok := gameCache.Load(game)
 	if !ok {
 		obj = &MatchRegistry{
-			Game:             game,
-			Mutex:            &sync.RWMutex{},
-			currentlyFilling: match,
-			available:        []*Match{match},
+			Game:      game,
+			Mutex:     &sync.RWMutex{},
+			available: []*Match{},
 		}
+		gameCache.Store(game, obj)
 	}
 
 	registry := obj.(*MatchRegistry)
@@ -69,6 +74,15 @@ func SetMatchState(server int, matchId int, state string) bool {
 		return true
 	}
 	return true
+}
+
+// Get the match registry for a game
+func getMatchRegistry(game string) (*MatchRegistry, bool) {
+	obj, ok := gameCache.Load(game)
+	if !ok {
+		return nil, false
+	}
+	return obj.(*MatchRegistry), true
 }
 
 // Helper function for quickly getting a match

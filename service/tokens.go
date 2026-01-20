@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"sync"
-	"time"
 )
 
 const TokenFileName = "tokens.json"
@@ -60,13 +59,6 @@ func LoadTokens() {
 		})
 	}
 	tokenCounter = len(tokens) + 1
-
-	// Start a goroutine to regularly clean up servers
-	go func() {
-		for {
-			time.Sleep(time.Minute)
-		}
-	}()
 }
 
 func GetFreeToken() (*TokenInfo, bool) {
