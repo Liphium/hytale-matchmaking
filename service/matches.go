@@ -64,6 +64,19 @@ type MatchRegistry struct {
 	available        []*Match
 }
 
+func (mr *MatchRegistry) GetMatch(id int) (*Match, bool) {
+	mr.Mutex.RLock()
+	defer mr.Mutex.RUnlock()
+
+	i := slices.IndexFunc(mr.available, func(m *Match) bool {
+		return m.ID == id
+	})
+	if i < 0 {
+		return nil, false
+	}
+	return mr.available[i], true
+}
+
 // Add a match to the registry
 func (mr *MatchRegistry) AddMatch(match *Match) {
 	mr.Mutex.Lock()

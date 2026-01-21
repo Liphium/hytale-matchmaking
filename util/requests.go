@@ -37,13 +37,20 @@ func (se ServiceError) Error() string {
 
 // Helper function to generate a URL to the server (e.g. /some -> https://server.com/some)
 func DefaultPath(path string) string {
-	return os.Getenv("PROTOCOL") + os.Getenv("DOMAIN") + path
+	return fmt.Sprintf("http://%s%s", os.Getenv("LISTEN"), path)
+}
+
+// Helper function for creating headers with just the credential
+func CredentialHeaders() Headers {
+	return Headers{
+		"Credential": GetCredential(),
+	}
 }
 
 type Headers = map[string]string
 
 // Send a post request to any URL with headers attached
-func Post[T any](url string, body interface{}, headers Headers) (T, error) {
+func Post[T any](url string, body any, headers Headers) (T, error) {
 
 	// Declared here so it can be returned as nil before it's actually used
 	var data T

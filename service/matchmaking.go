@@ -1,6 +1,8 @@
 package service
 
-import "sync"
+import (
+	"sync"
+)
 
 // Game (string) -> *MatchRegistry
 var gameCache = &sync.Map{}
@@ -21,6 +23,11 @@ func AddMatch(server int, data MatchCreate) bool {
 	// Make sure server stuff can be read
 	info.Mutex.RLock()
 	defer info.Mutex.RUnlock()
+
+	// Make sure the match doesn't already exist
+	if _, ok := info.Matches.Load(data.ID); ok {
+		return false
+	}
 
 	// Initialize the match with the data from the request
 	match := &Match{
@@ -77,7 +84,7 @@ func SetMatchState(server int, matchId int, state string) bool {
 }
 
 // Get the match registry for a game
-func getMatchRegistry(game string) (*MatchRegistry, bool) {
+func GetMatchRegistry(game string) (*MatchRegistry, bool) {
 	obj, ok := gameCache.Load(game)
 	if !ok {
 		return nil, false

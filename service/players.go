@@ -57,7 +57,7 @@ func IsOnServerOrWaiting(account string) bool {
 
 // nil if no match has available slots (returns the token and server id if success)
 func CreatePlayerIfPossible(game string, account string) (string, int, bool) {
-	mr, ok := getMatchRegistry(game)
+	mr, ok := GetMatchRegistry(game)
 	if !ok {
 		return "", 0, false
 	}

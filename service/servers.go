@@ -66,7 +66,7 @@ func init() {
 	}
 }
 
-func CreateServer(id int, ip string, port int, game string) bool {
+func CreateServer(id int, ip string, port int) bool {
 	overwritten := serverCache.SetWithTTL(id, &ServerInfo{
 		Mutex:   &sync.RWMutex{},
 		TokenId: id,

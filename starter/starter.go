@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/hytale-matchmaking/routes"
 	"github.com/Liphium/hytale-matchmaking/service"
+	"github.com/Liphium/magic/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -26,6 +27,17 @@ func Start() {
 	// Hello world handler for health checks
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello from Hytale Matchmaking!")
+	})
+
+	// Add a startup hook to notify Magic of the app start
+	app.Hooks().OnListen(func(listenData fiber.ListenData) error {
+		if fiber.IsChild() {
+			return nil
+		}
+
+		// Tell Magic the app has started: Makes sure tests start to run after this.
+		magic.AppStarted()
+		return nil
 	})
 
 	app.Listen(os.Getenv("LISTEN"))

@@ -8,7 +8,6 @@ import (
 type RegisterServerRequest struct {
 	IP   string `json:"ip"`
 	Port int    `json:"port"`
-	Game string `json:"game"`
 }
 
 type RegisterServerResponse struct {
@@ -34,7 +33,7 @@ func registerServer(c *fiber.Ctx) error {
 	token.Mutex.Lock()
 	defer token.Mutex.Unlock()
 
-	service.CreateServer(token.Id, req.IP, req.Port, req.Game)
+	service.CreateServer(token.Id, req.IP, req.Port)
 	return c.JSON(RegisterServerResponse{
 		ID:           token.Id,
 		AccessToken:  token.Token.AccessToken,
