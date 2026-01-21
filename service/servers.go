@@ -86,3 +86,15 @@ func RefreshServer(id int) {
 		serverCache.Wait()
 	}
 }
+
+// Get a server's ip and port
+func GetServerDetails(id int) (ip string, port int, ok bool) {
+	server, ok := serverCache.Get(id)
+	if !ok {
+		return "", 0, false
+	}
+
+	server.Mutex.RLock()
+	defer server.Mutex.RUnlock()
+	return server.IP, server.Port, true
+}
