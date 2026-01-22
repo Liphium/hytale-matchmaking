@@ -121,11 +121,7 @@ func (mr *MatchRegistry) setBestFillingMatch() {
 
 	mr.Mutex.Lock()
 	defer mr.Mutex.Unlock()
-
-	// Another call to this function might have set it while we were blocking
-	if mr.currentlyFilling != nil {
-		return
-	}
+	mr.currentlyFilling = nil
 
 	currentSize := -1
 	for _, match := range mr.available {

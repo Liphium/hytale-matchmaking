@@ -63,7 +63,7 @@ func addMatchToGame(game string, match *Match) {
 
 // Returns false when it didn't work
 func SetMatchState(server int, matchId int, state string) bool {
-	match, ok := getMatchFromServer(server, matchId)
+	match, ok := GetMatchFromServer(server, matchId)
 	if !ok {
 		return false
 	}
@@ -93,7 +93,7 @@ func GetMatchRegistry(game string) (*MatchRegistry, bool) {
 }
 
 // Helper function for quickly getting a match
-func getMatchFromServer(server int, match int) (*Match, bool) {
+func GetMatchFromServer(server int, match int) (*Match, bool) {
 	info, ok := serverCache.Get(server)
 	if !ok {
 		return nil, false

@@ -63,7 +63,7 @@ func CreatePlayerIfPossible(game string, account string) (string, int, bool) {
 	}
 
 	// Find an available match (loops until there really isn't any slot available)
-	match := mr.getAvailableMatch()
+	var match *Match
 	for {
 		match = mr.getAvailableMatch()
 		if match == nil {
@@ -104,7 +104,7 @@ func ConfirmPlayerToken(server int, account string, token string) (int, bool) {
 	player.Mutex.RLock()
 
 	// Validate the match
-	match, ok := getMatchFromServer(server, player.Match)
+	match, ok := GetMatchFromServer(server, player.Match)
 	if !ok {
 		player.Mutex.RUnlock()
 		return 0, false
@@ -174,7 +174,7 @@ func deletePlayer(account string) {
 			srv.Players.Delete(account)
 
 			// Delete the player from the match they were in
-			m, ok := getMatchFromServer(info.Server, info.Match)
+			m, ok := GetMatchFromServer(info.Server, info.Match)
 			if ok {
 				m.Mutex.Lock()
 				defer m.Mutex.Unlock()
