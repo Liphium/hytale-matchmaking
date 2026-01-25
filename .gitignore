@@ -104,5 +104,5 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,go,dotenv
 
 tokens.json
-testing/
+test-runner/
 .magic/

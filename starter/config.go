@@ -19,7 +19,7 @@ func BuildMagicConfig() magic.Config {
 
 			tokenFileLoc := mconfig.ValueStatic(".")
 			if ctx.Profile() == "test" {
-				tokenFileLoc = mconfig.ValueStatic("testing")
+				tokenFileLoc = mconfig.ValueStatic("test-runner")
 			}
 
 			ctx.WithEnvironment(mconfig.Environment{
