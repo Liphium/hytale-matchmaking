@@ -1,0 +1,36 @@
+# This workflow tests the application and uploads the test coverage as an artifact
+
+name: Run all tests (Ubuntu)
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MAGIC_POSTGRES_IMAGE: "postgres:17.5" # Magic PostgreSQL image (latest supported version at time of writing)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ">=1.25.2"
+
+      - name: Pull postgres image
+        run: docker pull ${{ env.MAGIC_POSTGRES_IMAGE }}
+
+      - name: Test
+        run: go test -timeout 20m -v ./... -coverpkg="./..." -coverprofile="coverage.out"
+
+      - name: Build
+        run: go build -tags release .
+
+      - uses: actions/upload-artifact@v5.0.0
+        with:
+          name: test-coverage.out
+          path: coverage.out
