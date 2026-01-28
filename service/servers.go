@@ -31,6 +31,7 @@ func init() {
 		BufferItems: 64,          // Read description of field
 
 		OnEvict: func(item *ristretto.Item[*ServerInfo]) {
+			log.Println("Server", item.Value.IP, "disconnected.")
 
 			// Cleanup server (in goroutine to make sure it doesn't block anything in ristretto)
 			go func() {
