@@ -20,7 +20,7 @@ type Match struct {
 	State      string   // The current state of the match
 	Game       string   // The gamemode the match is in
 	Players    []string // List of player ids in the match
-	MaxPlayers int      // The maximum amount of players that can fit into the match
+	TokenStore []string // List of tokens that can still be used
 }
 
 // Locks the mutex
@@ -32,19 +32,24 @@ func (m *Match) CanBeJoined() bool {
 }
 
 func (m *Match) canBeJoinedNoMutex() bool {
-	return m.State == MatchStateAccepting && len(m.Players)+1 <= m.MaxPlayers
+	return m.State == MatchStateAccepting && len(m.TokenStore) > 0
 }
 
 // Tries to add a player to the match (returns false if it didn't work)
-func (m *Match) AddPlayerIfPossible(id string) bool {
+func (m *Match) AddPlayerIfPossible(id string) (string, bool) {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
 
 	if m.canBeJoinedNoMutex() {
 		m.Players = append(m.Players, id)
-		return true
+
+		// Remove the first token and remove it
+		token := m.TokenStore[0]
+		m.TokenStore = slices.Delete(m.TokenStore, 0, 1)
+
+		return token, true
 	}
-	return false
+	return "", false
 }
 
 // Remove all players in the match from the system
@@ -53,7 +58,7 @@ func (m *Match) deleteAllPlayers() {
 	defer m.Mutex.RUnlock()
 
 	for _, player := range m.Players {
-		go deletePlayer(player) // In a goroutine to make sure no mutex shit happens
+		go DeletePlayer(player, nil) // In a goroutine to make sure no mutex shit happens
 	}
 }
 

@@ -44,7 +44,7 @@ func init() {
 					p.Mutex.RLock()
 					defer p.Mutex.RUnlock()
 
-					deletePlayer(p.Account)
+					DeletePlayer(p.Account, nil)
 					return true
 				})
 				item.Value.Players.Clear()

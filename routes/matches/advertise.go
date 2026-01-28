@@ -8,6 +8,7 @@ import (
 type AdvertiseMatchRequest struct {
 	Server int                 `json:"server"`
 	Match  service.MatchCreate `json:"match"`
+	Tokens []string            `json:"tokens"` // Tokens for all the players (required to let the match server check tokens without web requests)
 }
 
 // Route: POST /api/matches/advertise
@@ -17,7 +18,7 @@ func AdvertiseMatch(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	if !service.AddMatch(req.Server, req.Match) {
+	if !service.AddMatch(req.Server, req.Match, req.Tokens) {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 

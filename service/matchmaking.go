@@ -8,13 +8,12 @@ import (
 var gameCache = &sync.Map{}
 
 type MatchCreate struct {
-	ID         int    `json:"id"`          // Unique id (by server)
-	Game       string `json:"game"`        // The gamemode the match is in
-	MaxPlayers int    `json:"max_players"` // The maximum amount of players that can fit into the match
+	ID   int    `json:"id"`   // Unique id (by server)
+	Game string `json:"game"` // The gamemode the match is in
 }
 
 // Returns whether or not the match could be registered (state and stuff will be adjusted)
-func AddMatch(server int, data MatchCreate) bool {
+func AddMatch(server int, data MatchCreate, tokens []string) bool {
 	info, ok := serverCache.Get(server)
 	if !ok {
 		return false
@@ -34,8 +33,9 @@ func AddMatch(server int, data MatchCreate) bool {
 		Mutex:      &sync.RWMutex{},
 		ID:         data.ID,
 		Game:       data.Game,
-		MaxPlayers: data.MaxPlayers,
 		Server:     server,
+		Players:    []string{},
+		TokenStore: tokens,
 		State:      MatchStateAvailable,
 	}
 

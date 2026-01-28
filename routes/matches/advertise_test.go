@@ -24,9 +24,8 @@ func TestAdvertise(t *testing.T) {
 	assert.True(t, service.CreateServer(id, server, port))
 
 	matchToCreate := service.MatchCreate{
-		ID:         1,
-		Game:       game,
-		MaxPlayers: 1,
+		ID:   1,
+		Game: game,
 	}
 
 	t.Run("match can be advertised", func(t *testing.T) {
@@ -38,6 +37,7 @@ func TestAdvertise(t *testing.T) {
 			SetBody(matches_routes.AdvertiseMatchRequest{
 				Server: id,
 				Match:  matchToCreate,
+				Tokens: []string{"test"},
 			}).
 			Post(util.DefaultPath("/api/matches/advertise"))
 		assert.Nil(t, err)
@@ -49,7 +49,6 @@ func TestAdvertise(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, matchToCreate.ID, match.ID)
 		assert.Equal(t, matchToCreate.Game, match.Game)
-		assert.Equal(t, matchToCreate.MaxPlayers, match.MaxPlayers)
 		assert.Equal(t, 0, len(match.Players))
 		assert.Equal(t, service.MatchStateAvailable, match.State)
 		assert.Equal(t, id, match.Server)

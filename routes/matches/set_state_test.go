@@ -25,11 +25,10 @@ func TestSetState(t *testing.T) {
 
 	// Create a test match
 	created := service.MatchCreate{
-		ID:         1,
-		Game:       game,
-		MaxPlayers: 1,
+		ID:   1,
+		Game: game,
 	}
-	assert.True(t, service.AddMatch(1, created))
+	assert.True(t, service.AddMatch(1, created, []string{"test"}))
 
 	t.Run("match state can be changed", func(t *testing.T) {
 		client := resty.New()

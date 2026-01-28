@@ -25,10 +25,9 @@ func TestPlayerQueuing(t *testing.T) {
 	)
 	assert.True(t, service.CreateServer(serverId, server, port))
 	assert.True(t, service.AddMatch(serverId, service.MatchCreate{
-		ID:         matchId,
-		Game:       game,
-		MaxPlayers: 1,
-	}))
+		ID:   matchId,
+		Game: game,
+	}, []string{"test"}))
 	service.SetMatchState(serverId, matchId, service.MatchStateAccepting)
 
 	t.Run("player can be queued", func(t *testing.T) {
@@ -48,9 +47,9 @@ func TestPlayerQueuing(t *testing.T) {
 		var r players_routes.QueuePlayerResponse
 		testing_util.Unmarshal(t, res.Bytes(), &r)
 
+		assert.Equal(t, "test", r.Token)
 		assert.Equal(t, server, r.Address)
 		assert.Equal(t, port, r.Port)
-		assert.NotEmpty(t, r.Token)
 	})
 
 	t.Run("queueing another player fails", func(t *testing.T) {

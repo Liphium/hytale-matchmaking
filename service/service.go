@@ -1,7 +1,7 @@
 package service
 
 func ResetAll() {
-	playerCache.Clear()
+	PlayerCache.Clear()
 	serverCache.Clear()
 	gameCache.Clear()
 	tokensMap.Clear()
